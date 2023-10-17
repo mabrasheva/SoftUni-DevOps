@@ -1,0 +1,15 @@
+az login
+az group create --name maria_abrhomiessrg --location westeurope
+az acr create --resource-group maria_abrhomiessrg --name mariaabrhomiesscr --sku Basic
+az acr login --name mariaabrhomiesscr
+az acr show --name mariaabrhomiesscr --query loginServer --output table
+mariaabrhomiesscr.azurecr.io
+docker compose up --build -d
+docker compose down
+docker compose push
+docker context create aci homies
+docker context use homies
+docker compose up
+
+docker context rm homies
+az group delete --name maria_abrhomiessrg

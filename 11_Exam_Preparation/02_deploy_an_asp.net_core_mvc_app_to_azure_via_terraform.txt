@@ -1,0 +1,6 @@
+Upload app source code to GitHub repo.
+az login
+terraform init
+terraform fmt
+terraform validate
+terraform apply -var-file="values.tfvars"
