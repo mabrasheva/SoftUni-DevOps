@@ -1,0 +1,10 @@
+# Install node from official site
+# Install vue
+npm install -g @vue/cli
+vue init browserify MyWebSite
+cd MyWebSite
+npm install
+npm run dev
+
+package.json -> "serve": "http-server -o -c 1 -a 0.0.0.0",
+docker run -it -p 8080:8080 -v ${PWD}:/app -w /app node:16 npm run serve

@@ -1,0 +1,16 @@
+docker network create react-express
+
+docker network create express-mongo
+
+docker run -d --name mongo --network express-mongo -v .\data:/data/db mongo -> създава папка data и я мапва към /data/db. Изпълнено в win.
+ 
+cd frontend
+docker build -t frontend_image .
+
+cd backend
+docker build -t backend_image .
+
+docker run -d --name backend --network react-express backend_image
+docker network connect express-mongo backend
+
+docker run -d --name frontend --network react-express -p 3000:3000 frontend_image

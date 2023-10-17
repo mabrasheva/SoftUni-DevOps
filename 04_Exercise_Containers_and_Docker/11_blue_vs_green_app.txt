@@ -1,0 +1,183 @@
+docker network create frontend
+docker network create backend
+
+docker volume create vote_volume
+docker volume create result_volume
+docker volume create db_volume
+
+docker run -d --name db --network backend -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -v db_volume:/var/lib/postgresql/data postgres
+
+docker run -d --name redis --network backend redis
+
+vote Dockerfile:
+---------------------------------------------
+# Using official python runtime base image
+FROM python:3.9-slim
+
+# Set the application directory
+WORKDIR /app
+
+# Install our requirements.txt
+COPY vote/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy our code from the current folder to /app inside the container
+COPY vote .
+
+# Make port 80 available for links and/or publish
+EXPOSE 80
+
+# Define our command to be run when launching the container
+CMD [ "python", "app.py" ]
+---------------------------------------------
+
+docker build -t vote -f .\vote\Dockerfile .
+docker run -d --name vote --network frontend -p 5000:80 -v vote_volume:/app vote
+docker network connect backend vote
+
+worker Dockerfile:
+---------------------------------------------
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 as builder
+
+# Create a working directory
+WORKDIR /worker
+
+# Copy the .csproj file and restore
+COPY worker/src/Worker/Worker.csproj .
+RUN dotnet restore
+
+# Copy source files to the image
+COPY worker/src/Worker/ .
+
+# Build the project
+RUN dotnet publish -c Release -o /out Worker.csproj
+
+# Specify app image
+FROM mcr.microsoft.com/dotnet/aspnet:3.1
+
+# Specify working directory for this stage
+WORKDIR /app
+
+# Tell Docker what command to run when our image is executed inside a container
+ENTRYPOINT dotnet Worker.dll
+
+# Copy the /out directory from the build stage into the runtime image
+COPY --from=builder /out .
+---------------------------------------------
+
+docker build -t worker -f .\worker\Dockerfile .
+docker run -d --network backend --name worker worker
+
+result Dockerfile
+---------------------------------------------
+FROM node:10-slim
+
+# Add Tini for proper init of signals
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod +x /tini
+
+WORKDIR /app
+
+# have nodemon available for local dev use (file watching)
+RUN npm install -g nodemon
+
+COPY result/package*.json ./
+
+RUN npm ci \
+ && npm cache clean --force \
+ && mv /app/node_modules /node_modules
+
+COPY . .
+
+ENV PORT 80
+
+EXPOSE 80
+
+CMD ["/tini", "--", "node", "server.js"]
+
+---------------------------------------------
+
+docker build -t result -f .\result\Dockerfile
+docker run -d --name result -p 5001:80 --network backend -v result_volume:/app result
+docker network connect frontend result
+
+docker-compose.yml
+
+---------------------------------------------
+
+version: "3.8"
+services:
+  vote:
+    container_name: vote
+    build:
+      dockerfile: ./vote/Dockerfile
+    command: python app.py
+    volumes:
+      - vote_volume:/app
+    ports:
+      - 5000:80
+    restart: on-failure
+    networks:
+      - frontend
+      - backend
+
+  result:
+    container_name: result
+    build:
+      dockerfile: ./result/Dockerfile
+    command: nodemon server.js
+    volumes:
+      - result_volume:/app
+    ports:
+      - 5001:80
+    restart: on-failure
+    networks:
+      - frontend
+      - backend
+
+  worker:
+    container_name: worker
+    build:
+      dockerfile: ./worker/Dockerfile
+    restart: on-failure
+    networks:
+      - backend
+
+  redis:
+    container_name: redis
+    image: redis
+    restart: on-failure
+    networks:
+      - backend
+
+  db:
+    container_name: db
+    image: postgres
+    restart: on-failure
+    networks:
+      - backend
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+    volumes:
+      - db_volume:/var/lib/postgresql/data
+
+volumes:
+  vote_volume:
+    external: true
+  result_volume:
+    external: true
+  db_volume:
+    external: true
+
+networks:
+  frontend:
+    external: true
+  backend:
+    external: true
+
+---------------------------------------------
+
+docker compose up -d --build
+docker compose down

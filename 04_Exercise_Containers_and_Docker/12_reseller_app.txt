@@ -1,0 +1,69 @@
+Install Maven
+set Environment Variable for Maven
+Install Java
+
+mvn clean package -DskipTests
+
+resellerapp Dockerfile:
+---------------------------------------------------------
+# Use the official OpenJDK image as the base image
+FROM openjdk:11-jre-slim
+
+# Set the maintainet of the image
+LABEL maintainer="Maria"
+
+# Copy the compiled jar file into the image
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} app.jar
+
+# Expose the port the app runs on
+EXPOSE 8080
+
+# Command to run the application
+ENTRYPOINT [ "java", "-jar", "/app.jar" ]
+---------------------------------------------------------
+
+docker build -t resellerapp .
+
+docker-compose:
+---------------------------------------------------------
+
+version: "3.8"
+services:
+  resellerapp:
+    container_name: resellerapp
+    image: resellerapp
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/resellerdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=my-secret-pw
+    networks:
+      - backend
+
+  mysql:
+    container_name: mysql
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=my-secret-pw
+      - MYSQL_DATABASE=resellerdb
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=userpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - backend
+volumes:
+  mysql-data:
+networks:
+  backend:
+  
+---------------------------------------------------------
+
+docker compose up --build -d
+

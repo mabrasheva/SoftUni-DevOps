@@ -1,0 +1,2 @@
+# map current PowerShell directory to the container's directory /usr/local/apache2/htdocs/
+docker run -d --name my-apache-app -p 8080:80 -v ${PWD}:/usr/local/apache2/htdocs httpd:latest

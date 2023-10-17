@@ -1,0 +1,24 @@
+# go to the root folder of the Vue.js app that we created and ran in our previous session.
+cd C:\Users\...\Lesson_2_Containers_and_Docker\02_vue_js_app_in_container
+# Create Dockerfile
+---------------------------------
+FROM node:16
+
+WORKDIR /app
+
+COPY . .
+
+RUN npm install
+
+CMD ["npm", "run", "dev"]
+---------------------------------
+docker build -t my-webapp .
+docker login
+docker tag my-webapp mariaabr/my-webapp:0.0.1
+docker tag my-webapp mariaabr/my-webapp:latest
+docker push my-webapp mariaabr/my-webapp:0.0.1
+# remove local images
+docker rmi mariaabr/my-webapp:latest
+docker rmi mariaabr/my-webapp:0.0.1
+# run the app from docker hub repo image
+docker run -d -p 8080:8080 mariaabr/my-webapp

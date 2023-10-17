@@ -1,0 +1,18 @@
+docker run -p 27017:27017 `
+-v ${PWD}/data:/etc/mongo `
+-d `
+-e MONGO_INITDB_ROOT_USERNAME=mongoadmin `
+-e MONGO_INITDB_ROOT_PASSWORD=mongoadminpass `
+mongo
+
+
+# To persist data after container is stopped, create a volume, using the following command:
+docker run -p 27017:27017 `
+-v data:/etc/mongo `
+-d `
+-e MONGO_INITDB_ROOT_USERNAME=mongoadmin `
+-e MONGO_INITDB_ROOT_PASSWORD=mongoadminpass `
+mongo
+
+docker rmi mongo
+docker volume rm data

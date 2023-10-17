@@ -1,0 +1,7 @@
+TaskBoard.sln - > Open in Visual Studio -> TaskBoard.WebApp ->  select `Add` -> `Docker Support` -> Linux
+
+docker build -f .\TaskBoard.WebApp\Dockerfile -t mariaabr/taskboard_app .
+
+docker images
+docker login
+docker push mariaabr/taskboard_app

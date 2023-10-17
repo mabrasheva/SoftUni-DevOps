@@ -1,0 +1,56 @@
+Dockerfile:
+---------------------------------------------------------------------------------------------------------------
+# Use the official Python image based on Debian Buster with Python 3.8 (slim-buster variant)
+FROM python:3.8-slim-buster
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Install requirements.txt
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy Python application files to the container working directory
+COPY . /app
+
+# Creates a new directory named staticfiles in the /app/ directory of the container.
+RUN mkdir /app/staticfiles
+
+# Copy the static folder into /app/staticfiles in the container.
+COPY static /app/static
+
+# Expose port 8000.
+EXPOSE 8000
+
+# Run command to start the application
+CMD ["gunicorn", "SimplePageApp.wsgi:application", "--bind", "0.0.0.0:8000"]
+
+---------------------------------------------------------------------------------------------------------------
+
+docker build -t fruitipedia_app .
+
+docker run -p 8000:8000 --name fruitipedia_app fruitipedia_app
+
+docker-compose:
+
+---------------------------------------------------------------------------------------------------------------
+
+version: "3.8"
+services:
+  web:
+    container_name: web
+    build: .
+    volumes:
+      - ./static:/app/staticfiles
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=false
+
+---------------------------------------------------------------------------------------------------------------
+
+docker compose up --build -d

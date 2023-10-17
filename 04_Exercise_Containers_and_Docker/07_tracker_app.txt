@@ -1,0 +1,6 @@
+docker build -t mariaabr/tracker_app:latest .
+docker build -t mariaabr/tracker_app:0.0.1 .
+docker push mariaabr/tracker_app:latest
+docker push mariaabr/tracker_app:0.0.1
+
+docker run -d --name tracker_app -p 80:80  mariaabr/tracker_app
