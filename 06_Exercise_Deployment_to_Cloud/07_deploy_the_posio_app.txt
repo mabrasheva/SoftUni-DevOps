@@ -1,0 +1,41 @@
+az login
+az group create --name posioResourceGroupMariaabr --location westeurope
+az acr create --resource-group posioResourceGroupMariaabr --name posioappcrmariaabr --sku Basic
+az acr login --name posioappcrmariaabr
+az acr show --name posioappcrmariaabr --query loginServer --output table
+---> posioappcrmariaabr.azurecr.io
+
+docker-compose.yml
+------------------------------------------------------------
+version: '3'
+
+services:
+  app:
+    image: posioappcrmariaabr.azurecr.io/posio-image
+    volumes:
+      - posio:/posio
+    environment:
+      - POSIO_SETTINGS=/app/config.py
+    ports:
+      - 5000:5000
+
+volumes:
+  posio:
+    driver: azure_file
+    driver_opts:
+      share_name: posio-volume
+      storage_account_name: posiostoragemariaabr
+
+------------------------------------------------------------
+docker build -t posioappcrmariaabr.azurecr.io/posio-image .
+docker push posioappcrmariaabr.azurecr.io/posio-image
+az acr repository list --name posioappcrmariaabr
+docker context create aci posio
+docker context use posio
+docker compose up
+
+docker compose down
+az group delete --name posioResourceGroupMariaabr
+docker context use default
+docker context rm posio
+

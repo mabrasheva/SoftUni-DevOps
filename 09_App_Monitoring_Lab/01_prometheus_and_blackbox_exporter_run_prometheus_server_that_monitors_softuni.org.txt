@@ -1,0 +1,15 @@
+docker run -d -p 9115:9115 quay.io/prometheus/blackbox-exporter
+http://localhost:9115/probe?target=https://softuni.org
+
+Create prometheus-blackbox.yml in prometheus folder.
+
+Run power shell as administrator.
+Navigate to prometheus folder.
+cd 'C:\Program Files\prometheus-2.47.0.windows-amd64'
+.\prometheus --config.file prometheus-blackbox.yml
+
+http://localhost:9090/graph
+[Status] → [Targets]
+
+In order to look at Prometheus graph, navigate to [Graph], choose a metric to visualize and click [Execute]. From there you can switch from [Table] to [Graph], where you can examine the visualization:
+

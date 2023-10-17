@@ -1,0 +1,31 @@
+Use the terraform files from the previous task.
+Upload them to GitHub repo.
+GitHub repo -> Actions -> Terraform -> terraform-test.yml
+
+az ad sp create-for-rbac --name "Azure-Terraform-GitHub-Actions-Mariaabr" --role contributor --scopes /subscriptions/<subscription-id-from-azure> --sdk-auth
+--> Copy the credentials
+
+Create GitHub Secrets
+
+{
+  "clientId": "...",
+  "clientSecret": "...",
+  "subscriptionId": "...",
+  "tenantId": "...",
+  "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+  "resourceManagerEndpointUrl": "https://management.azure.com/",
+  "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+  "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+  "galleryEndpointUrl": "https://gallery.azure.com/",
+  "managementEndpointUrl": "https://management.core.windows.net/"
+}
+
+GitHub repo -> Actions -> Terraform -> terraform-plan-apply.yml
+
+# Store State File in Azure Storage Account
+Terraform utilizes a state file to store information about the current state of your managed infrastructure and associated configuration. This file will need to be persisted between different runs of the workflow.
+The recommended approach is to store this file within an Azure Storage Account and this is what we will do now. First, you should create an Azure storage account with a container to store the state file:
+
+az group create --name StorageRGMariaabr --location westeurope
+az storage account create --name taskboardstoragemariaabr --resource-group StorageRGMariaabr --location westeurope --sku Standard_LRS --kind StorageV2
+az storage container create -n taskboardcontainermariaabr --account-name taskboardstoragemariaabr

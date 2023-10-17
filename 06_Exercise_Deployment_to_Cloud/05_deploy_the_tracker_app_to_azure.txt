@@ -1,0 +1,58 @@
+install Azure CLI. This can be done through PowerShell with the following command:
+$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile .\AzureCLI.msi; Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'; rm .\AzureCLI.msi
+
+# create the image
+docker build -t tracker-app-image .
+
+# use this image to run a container locally to see if it works
+docker run -d --name tracker-app -p 80:80 tracker-app-image
+
+docker rm -f tracker-app
+
+az login
+# Create a new resource group in Azure 
+az group create --name trackerapprg-mariaabr --location westeurope
+# Create an Azure container registry
+az acr create --resource-group trackerapprg-mariaabr --name trackerappcrmariaabr --sku Basic
+# log in to the container registry you created, so that you can push images to it
+az acr login --name trackerappcrmariaabr
+# To push a container image to a private registry like Azure Container Registry, you must first tag the image with the full name of the registry's login server.
+# Get the full login server name for your Azure container registry:
+az acr show --name trackerappcrmariaabr --query loginServer --output table
+Result
+-------------------------------
+trackerappcrmariaabr.azurecr.io
+# tag the container image we created in the previous step with the login server of your container registry
+docker tag tracker-app-image trackerappcrmariaabr.azurecr.io/tracker-app-image:v1
+# push your new image to Azure Container Registry
+docker push trackerappcrmariaabr.azurecr.io/tracker-app-image:v1
+# list the images in your container registry
+az acr repository list --name trackerappcrmariaabr
+
+
+# Create service principal (уникален). Може да се види в Azure GUI -> App registration.
+$ACR_NAME='trackerappcrmariaabr'
+$SERVICE_PRINCIPAL_NAME='trackerappspmariaabr'
+# Obtain the full registry ID
+$ACR_REGISTRY_ID=$(az acr show --name $ACR_NAME --query "id" --output tsv)
+# Create and configure the service principal with pull permissions to your registry
+$PASSWORD=$(az ad sp create-for-rbac --name $SERVICE_PRINCIPAL_NAME --scopes $ACR_REGISTRY_ID --role acrpull --query "password" --output tsv)
+$USER_NAME=$(az ad sp list --display-name $SERVICE_PRINCIPAL_NAME --query "[].appId" --output tsv)
+# Output the service principal's credentials
+echo "Service principal ID: $USER_NAME"
+echo "Service principal password: $PASSWORD"
+
+# Container deployment
+az container create --resource-group trackerapprg-mariaabr --name trackerappmariaabr --image trackerappcrmariaabr.azurecr.io/tracker-app-image:v1 --cpu 1 --memory 1 --registry-login-server trackerappcrmariaabr.azurecr.io --registry-username ${USER_NAME} --registry-password ${PASSWORD} --ip-address Public --dns-name-label trackerappdnsmariaabr --ports 80
+
+# view the container state of deployment
+az container show --resource-group trackerapprg-mariaabr --name trackerappmariaabr --query instanceView.state
+
+# display the container's FQDN
+az container show --resource-group trackerapprg-mariaabr --name trackerappmariaabr --query ipAddress.fqdn
+
+# view the log output of the container 
+az container logs --resource-group trackerapprg-mariaabr --name trackerappmariaabr
+
+# clear all resources by deleting the resource group
+az group delete --name trackerapprg-mariaabr

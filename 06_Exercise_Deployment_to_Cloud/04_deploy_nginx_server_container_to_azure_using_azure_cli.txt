@@ -1,0 +1,10 @@
+docker login azure
+docker context create aci nginxacicontext
+docker context use nginxacicontext
+docker run -p 80:80 registry.hub.docker.com/nginxdemos/hello
+docker ps
+docker logs vigorous-tereshkova
+docker stop vigorous-tereshkova
+docker rm vigorous-tereshkova
+docker context use default
+docker context rm nginxacicontext

@@ -1,0 +1,57 @@
+az login
+az group create --name taskBoardResourceGroupMariaabr --location westeurope
+az acr create --resource-group taskBoardResourceGroupMariaabr --name taskboardcrmariaabr --sku Basic
+az acr login --name taskboardcrmariaabr
+az acr show --name taskboardcrmariaabr --query loginServer --output table
+
+docker-compose.yml
+------------------------------------------------------------------------
+version: "3.8"
+
+services:
+    sqlserver:
+        container_name: sqlserver
+        image: mcr.microsoft.com/mssql/server
+        ports:
+            - "1433:1433"
+        deploy:
+            resources:
+                reservations:
+                    cpus: '2'
+                    memory: 2GB
+        environment:
+            - ACCEPT_EULA=Y
+            - MSSQL_SA_PASSWORD=yourStrongPassword12#
+        volumes:
+            - sqldata:/var/opt/mssql
+    web-app:
+        container_name: web-app
+        build:
+            dockerfile: ./TaskBoard.WebApp/Dockerfile
+        image: taskboardcrmariaabr.azurecr.io/taskboard-image
+        ports:
+            - "80:80"
+        restart: on-failure
+
+volumes:
+    sqldata:
+------------------------------------------------------------------------
+
+# Run Multi-Container App Locally
+docker compose up --build -d
+docker ps
+docker rm -f ba95cf5dcf47 27295f35dfea
+
+docker images
+docker compose push
+
+az acr repository list --name taskboardcrmariaabr
+
+docker context create aci taskboardcontext
+docker context use taskboardcontext
+
+# Create storage account
+az storage account create --name taskboardmariaabracc --resource-group taskBoardResourceGroupMariaabr --location westeurope --sku Standard_LRS
+
+docker compose up
+

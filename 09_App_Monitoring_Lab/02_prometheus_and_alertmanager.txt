@@ -1,0 +1,31 @@
+run Prometheus and Blackbox Exporter again:
+docker run -d -p 9115:9115 quay.io/prometheus/blackbox-exporter
+Create prometheus-blackbox.yml in prometheus folder.
+Run power shell as administrator.
+Navigate to prometheus folder.
+cd 'C:\Program Files\prometheus-2.47.0.windows-amd64'
+.\prometheus --config.file prometheus-blackbox.yml
+
+open Webhook.site and copy your unique URL for the Alertmanager configuration:
+https://webhook.site/<...>
+
+Navigate to alertmanager folder.
+cd 'C:\Program Files\alertmanager-0.26.0.windows-amd64'
+create alertmanager-blackbox.yml
+
+Navigate to prometheus folder.
+cd 'C:\Program Files\prometheus-2.47.0.windows-amd64'
+create alert-rules-blackbox-exporter.yml
+create prometheus-blackbox-alertmanager.yml
+
+Run alertmanager:
+PS C:\Program Files\alertmanager-0.26.0.windows-amd64>
+.\alertmanager --config.file .\alertmanager-blackbox.yml
+Alertmanager: http://localhost:9093/
+Run prometheus:
+PS C:\Program Files\prometheus-2.47.0.windows-amd64>
+.\prometheus --config.file prometheus-blackbox-alertmanager.yml
+Prometheus: http://localhost:9090
+
+Explore the alarm in prometheus, alertmanager and webhook.site.
+

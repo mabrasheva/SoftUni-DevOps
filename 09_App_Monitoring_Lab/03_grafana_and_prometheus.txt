@@ -1,0 +1,11 @@
+Start Grafana service.
+Login to Grafana: http://localhost:3000
+Home -> Connections -> Prometheus
+Dashboards -> New Dashboard -> Add visualization -> Prometheus as data source
+data source -> Prometheus
+Visualization -> Change from default 'Time series' to 'Histogram'.
+select the metric for lookup
+Run queries
+to change the panel title, click on the "Title" input field in the Panel options section
+Apply
+Save Dashboard
