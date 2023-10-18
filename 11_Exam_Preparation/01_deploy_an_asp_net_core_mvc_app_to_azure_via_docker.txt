@@ -4,10 +4,12 @@ az acr create --resource-group maria_abrhomiessrg --name mariaabrhomiesscr --sku
 az acr login --name mariaabrhomiesscr
 az acr show --name mariaabrhomiesscr --query loginServer --output table
 mariaabrhomiesscr.azurecr.io
+
 docker compose up --build -d
 docker compose down
 docker compose push
-docker context create aci homies
+
+docker context create aci homiesa
 docker context use homies
 docker compose up
 
