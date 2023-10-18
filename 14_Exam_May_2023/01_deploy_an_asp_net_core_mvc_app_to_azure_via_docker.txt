@@ -1,0 +1,19 @@
+az login
+az group create --name mariaabrcontactsrg --location westeurope
+az acr create --resource-group mariaabrcontactsrg --name mariaabrcontactscr --sku Basic
+az acr login --name mariaabrcontactscr
+az acr show --name mariaabrcontactscr --query loginServer --output table
+mariaabrcontactscr.azurecr.io
+docker compose build
+Ако името на image-а го има в docker-compose.yml ще се тагне с него при build.
+docker tag contacts-web-app mariaabrhomiesscr.azurecr.io/contacts-image
+Add image to docker-compose.yml
+docker compose push
+
+docker context create aci contacts
+docker context use contacts
+
+docker compose up
+
+docker context rm contacts
+az group delete --name mariaabrcontactsrg
