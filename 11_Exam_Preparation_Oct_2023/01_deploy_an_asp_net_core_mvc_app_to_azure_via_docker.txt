@@ -9,7 +9,7 @@ docker compose up --build -d
 docker compose down
 docker compose push
 
-docker context create aci homiesa
+docker context create aci homies
 docker context use homies
 docker compose up
 
