@@ -1,0 +1,17 @@
+az login
+az group create --name mariaabrlibraryrg --location westeurope
+az acr create --resource-group mariaabrlibraryrg --name mariaabrlibrarycr --sku Basic
+az acr login --name mariaabrlibrarycr
+az acr show --name mariaabrlibrarycr --query loginServer --output table
+mariaabrlibrarycr.azurecr.io
+
+docker compose build
+docker compose push
+
+docker context create aci library
+docker context use library
+docker compose up
+
+docker context use default
+docker context rm library
+az group delete --name mariaabrlibraryrg
